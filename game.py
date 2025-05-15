@@ -1,9 +1,10 @@
 import tkinter as tk
 import random
 import time
-from db import DB_PATH
 import sqlite3
 from datetime import datetime
+from db import DB_PATH
+from utils import format_time  # ✅ integriert
 
 UFO_COUNT = 5
 
@@ -28,7 +29,6 @@ class Game:
             self.user_id = c.fetchone()[0]
 
     def start_session(self):
-        self.session_id = None
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
             started = datetime.now().isoformat()
@@ -36,9 +36,7 @@ class Game:
             self.session_id = c.lastrowid
 
     def setup_game(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
+        self.clear()
         self.ufo_label = tk.Label(self.root, text="Klicke auf die UFOs so schnell du kannst!")
         self.ufo_label.pack(pady=10)
         self.spawn_next_ufo()
@@ -72,18 +70,23 @@ class Game:
 
     def end_game(self):
         avg = round(sum(self.reaction_times) / len(self.reaction_times), 3)
+        score = int((1 / avg) * 1000)
+
         with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
             c.execute("UPDATE sessions SET avg_reaction = ? WHERE id = ?", (avg, self.session_id))
-            c.execute("INSERT INTO scores (session_id, score) VALUES (?, ?)", (self.session_id, int((1/avg)*1000)))
+            c.execute("INSERT INTO scores (session_id, score) VALUES (?, ?)", (self.session_id, score))
             conn.commit()
 
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        tk.Label(self.root, text=f"Dein Durchschnitt: {avg}s").pack(pady=10)
+        self.clear()
+        tk.Label(self.root, text=f"🎯 Durchschnittliche Reaktionszeit: {avg} Sekunden").pack(pady=10)
+        tk.Label(self.root, text=f"🏆 Dein Score: {score} Punkte").pack(pady=5)
         tk.Button(self.root, text="Replay", command=lambda: Game(self.root, self.username, self.return_to_menu)).pack()
         tk.Button(self.root, text="Zurück zum Menü", command=self.return_to_menu).pack()
+
+    def clear(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
 def start_game(root, username, return_to_menu):
     Game(root, username, return_to_menu)

@@ -3,6 +3,7 @@ from tkinter import messagebox
 from db import init_db, get_or_create_user
 from game import start_game
 from stats import show_scoreboard, show_stats
+from utils import export_scores_to_csv
 
 class ReactionGameApp:
     def __init__(self, root):
@@ -36,6 +37,7 @@ class ReactionGameApp:
         tk.Button(self.root, text="Bedienungsanleitung", command=self.show_instructions).pack(fill='x')
         tk.Button(self.root, text="Scoreboard", command=show_scoreboard).pack(fill='x')
         tk.Button(self.root, text="Statistiken", command=lambda: show_stats(self.username)).pack(fill='x')
+        tk.Button(self.root, text="Scores exportieren (CSV)", command=export_scores_to_csv).pack(fill='x')
         tk.Button(self.root, text="Beenden", command=self.root.quit).pack(fill='x')
 
     def show_instructions(self):
